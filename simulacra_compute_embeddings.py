@@ -28,10 +28,14 @@ class SimulacraDataset(data.Dataset):
     def __init__(self, images_dir, db, transform=None):
         self.images_dir = Path(images_dir)
         self.transform = transform
-        self.conn = sqlite3.connect(db)
+        # self.conn = sqlite3.connect(db)
         self.ratings = []
-        for row in self.conn.execute('SELECT generations.id, images.idx, paths.path, AVG(ratings.rating) FROM images JOIN generations ON images.gid=generations.id JOIN ratings ON images.id=ratings.iid JOIN paths ON images.id=paths.iid GROUP BY images.id'):
-            self.ratings.append(row)
+        f = open(db,'r')
+        for lines in f:
+            row=lines.strip('\n').split("&&")
+            gid, idx, filename, rating = row
+            rating = float(rating)
+            self.ratings.append([gid, idx, filename, rating])
 
     def __len__(self):
         return len(self.ratings)
