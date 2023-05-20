@@ -8,6 +8,8 @@ from pathlib import Path
 import sqlite3
 
 from PIL import Image
+import requests
+from io import BytesIO
 
 import torch
 from torch import multiprocessing as mp
@@ -16,6 +18,9 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 
 from CLIP import clip
+
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class SimulacraDataset(data.Dataset):
@@ -32,7 +37,7 @@ class SimulacraDataset(data.Dataset):
         self.ratings = []
         f = open(db,'r')
         for lines in f:
-            row=lines.strip('\n').split("&&")
+            row=lines.strip('\n').split('\t')
             gid, idx, filename, rating = row
             rating = float(rating)
             self.ratings.append([gid, idx, filename, rating])
@@ -42,7 +47,10 @@ class SimulacraDataset(data.Dataset):
 
     def __getitem__(self, key):
         gid, idx, filename, rating = self.ratings[key]
-        image = Image.open(self.images_dir / filename).convert('RGB')
+        print(idx)
+        new_filename = str(idx)+'.jpg'
+        #image = Image.open(BytesIO(response.content)).convert('RGB')
+        image = Image.open(self.images_dir / new_filename).convert('RGB')
         if self.transform:
             image = self.transform(image)
         return image, torch.tensor(rating)
